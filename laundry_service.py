@@ -14,7 +14,7 @@ class Laundry:
         self._machine_type = machine_type # dryer of wmachine
         self._machine_id = machine_id # unique id in db as a string
         self._base_url="http://ec2-54-180-114-209.ap-northeast-2.compute.amazonaws.com:8080" # URL for database
-        self._time_count = 2 # counter to update over this many cycles
+        self._time_count = 30 # counter to update over this many cycles
         self._request_backlog = [] #stores list of requests that could not be completed
 
     def rc_time (self):
@@ -104,7 +104,7 @@ class Laundry:
                 if self._time_count <= 0:
                     self.queue_send_status()
                     self.clear_backlog()
-                    self._time_count=2
+                    self._time_count=30
         #catch when script is interrupted, cleanup correctly
         except KeyboardInterrupt:
             pass
