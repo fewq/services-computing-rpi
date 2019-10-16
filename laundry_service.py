@@ -10,9 +10,10 @@ class Laundry:
         self._pin_to_circuit=40
         self._raw_light = 0
         self._weighted_average = 300
+        self._bool_status = False
         self._machine_type = machine_type # dryer of wmachine
         self._machine_id = machine_id # unique id in db as a string
-        self._base_url="ec2-54-180-114-209.ap-northeast-2.compute.amazonaws.com:8080"
+        self._base_url="http://ec2-54-180-114-209.ap-northeast-2.compute.amazonaws.com:8080"
         self._time_count = 5
 
     def rc_time (self):
@@ -34,13 +35,19 @@ class Laundry:
         # use a weighted average to smooth the readings
         _tmp_weighted_average = 0.875*self._weighted_average + 0.125*self._raw_light
         self._weighted_average = _tmp_weighted_average
+        self._bool_status =  _tmp_weighted_average >= 300
         
 
     def send_status(self):
-        print("hello")
         request_string = self._base_url + "/api/" + self._machine_type + "/" + self._machine_id + "/event"
         print(request_string)
-        pass
+        timestamp_string = str(int(time.time()))
+        status_string = None
+        if self._bool_status == True:
+            status_string = "STARTED"
+        else:
+            status_string = "FINISHED"
+        requests.post(request_string, json={"timestamp": timestamp_string, "status": status_string})
 
     def run(self):
         try:
@@ -50,8 +57,7 @@ class Laundry:
                 self.rc_time()
                 self.calculate_wma()
                 #print(self._weighted_average)
-                bool_status = self._weighted_average>=300
-                print(bool_status, int(self._weighted_average)) 
+                print(self._bool_status, int(self._weighted_average)) 
                 self._time_count-=1
                 if self._time_count <= 0:
                     self.send_status()
