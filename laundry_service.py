@@ -1,5 +1,7 @@
 import RPi.GPIO as GPIO
 import time
+import requests
+
 
 class Laundry:
     def __init__(self):
@@ -36,7 +38,7 @@ class Laundry:
                 self.rc_time()
                 self.calculate_wma()
                 #print(self._weighted_average)
-                print(self._weighted_average>=300)
+                print(self._weighted_average>=300, int(self._weighted_average))
         #catch when script is interrupted, cleanup correctly
         except KeyboardInterrupt:
             pass
