@@ -10,8 +10,8 @@ class Laundry:
         self._pin_to_circuit=40
         self._raw_light = 0
         self._weighted_average = 300
-        self._machine_type = machine_type
-        self._machine_id = machine_id
+        self._machine_type = machine_type # dryer of wmachine
+        self._machine_id = machine_id # unique id in db as a string
         self._base_url="ec2-54-180-114-209.ap-northeast-2.compute.amazonaws.com:8080"
         self._time_count = 5
 
@@ -38,6 +38,8 @@ class Laundry:
 
     def send_status(self):
         print("hello")
+        request_string = self._base_url + "/api/" + self._machine_type + "/" + self._machine_id + "/event"
+        print(request_string)
         pass
 
     def run(self):
