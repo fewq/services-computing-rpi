@@ -50,8 +50,10 @@ class Laundry:
         else:
             status_string = "FINISHED"
         # make request
+        print("sending request with url: " + request_string )
+        print("and json = {timestamp: " + timestamp_string + ", status: " + status_string + "}")
         response = requests.post(request_string, json={"timestamp": timestamp_string, "status": status_string})
-
+        print("status code: " + str(response.status_code))
 
     def run(self):
         try:
@@ -67,7 +69,7 @@ class Laundry:
                 # update database every few cycles
                 if self._time_count <= 0:
                     self.send_status()
-                    self._time_count=60
+                    self._time_count=5
         #catch when script is interrupted, cleanup correctly
         except KeyboardInterrupt:
             pass
