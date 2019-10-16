@@ -14,7 +14,8 @@ class Laundry:
         self._machine_type = machine_type # dryer of wmachine
         self._machine_id = machine_id # unique id in db as a string
         self._base_url="http://ec2-54-180-114-209.ap-northeast-2.compute.amazonaws.com:8080" # URL for database
-        self._time_count = 30 # counter to update over this many cycles
+        self._time_count = 2 # counter to update over this many cycles
+        self._request_backlog = [] #stores list of requests that could not be completed
 
     def rc_time (self):
         # RPI doesn't have any analog pins so we need to use the time it takes
@@ -39,7 +40,7 @@ class Laundry:
         # set the status
         self._bool_status =  _tmp_weighted_average >= 300
 
-    def send_status(self):
+    def queue_send_status(self):
         # build the request string
         request_string = self._base_url + "/api/" + self._machine_type + "/" + self._machine_id + "/event"
         # get unix epoch time and status string for JSON
@@ -49,11 +50,44 @@ class Laundry:
             status_string = "STARTED"
         else:
             status_string = "FINISHED"
+        tmp_json = {"timestamp": timestamp_string, "status": status_string}
         # make request
-        print("sending request with url: " + request_string )
+        print("queueing request with url: " + request_string )
         print("and json = {timestamp: " + timestamp_string + ", status: " + status_string + "}")
-        response = requests.post(request_string, json={"timestamp": timestamp_string, "status": status_string})
-        print("status code: " + str(response.status_code))
+        
+        self._request_backlog.insert(0, (request_string, tmp_json))
+        
+        """
+        try:
+            r = requests.post(request_string, json=tmp_json)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            print("http error")
+        except requests.exceptions.ConnectionError as errc:
+            print("connection error")
+        except requests.exceptions.TimeoutError as errt:
+            print("timeout error")
+        except requests.exceptions.RequestException as err:
+            print("requestexception error")
+        """
+
+    def clear_backlog(self):
+        for req_tup in self._request_backlog:
+            try:
+                r = requests.post(req_tup[0], json=req_tup[1], timeout=5)
+                if r.ok:
+                    print("request sent for ", req_tup[1])
+                    self._request_backlog.pop(0)
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as errh:
+                print("http error", req_tup[1])
+            except requests.exceptions.ConnectionError as errc:
+                print("connection error", req_tup[1])
+            except requests.exceptions.Timeout as errt:
+                print("timeout error", req_tup[1])
+            except requests.exceptions.RequestException as err:
+                print("requestexception error", req_tup[1])
+            
 
     def run(self):
         try:
@@ -68,8 +102,9 @@ class Laundry:
                 self._time_count-=1
                 # update database every few cycles
                 if self._time_count <= 0:
-                    self.send_status()
-                    self._time_count=30
+                    self.queue_send_status()
+                    self.clear_backlog()
+                    self._time_count=2
         #catch when script is interrupted, cleanup correctly
         except KeyboardInterrupt:
             pass
