@@ -14,7 +14,7 @@ class Laundry:
         self._machine_type = machine_type # dryer of wmachine
         self._machine_id = machine_id # unique id in db as a string
         self._base_url="http://ec2-54-180-114-209.ap-northeast-2.compute.amazonaws.com:8080" # URL for database
-        self._time_count = 2 # counter to update over this many cycles
+        self._time_count = 30 # counter to update over this many cycles
 
     def rc_time (self):
         # RPI doesn't have any analog pins so we need to use the time it takes
@@ -69,7 +69,7 @@ class Laundry:
                 # update database every few cycles
                 if self._time_count <= 0:
                     self.send_status()
-                    self._time_count=5
+                    self._time_count=30
         #catch when script is interrupted, cleanup correctly
         except KeyboardInterrupt:
             pass
