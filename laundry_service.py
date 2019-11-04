@@ -54,9 +54,9 @@ class Laundry:
         # make request
         print("queueing request with url: " + request_string )
         print("and json = {timestamp: " + timestamp_string + ", status: " + status_string + "}")
-        
+
         self._request_backlog.insert(0, (request_string, tmp_json))
-        
+
         """
         try:
             r = requests.post(request_string, json=tmp_json)
