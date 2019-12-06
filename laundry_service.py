@@ -16,6 +16,8 @@ class Laundry:
         self._base_url="http://ec2-54-180-114-209.ap-northeast-2.compute.amazonaws.com:8080" # URL for database
         self._time_count = 30 # counter to update over this many cycles
         self._request_backlog = [] #stores list of requests that could not be completed
+        self._maintenance_pin = 38
+        GPIO.setup(self._maintenance_pin, GPIO.IN) #setup pin 38 to be the maintenance detector
 
     def rc_time (self):
         # RPI doesn't have any analog pins so we need to use the time it takes
@@ -46,7 +48,9 @@ class Laundry:
         # get unix epoch time and status string for JSON
         timestamp_string = str(int(time.time()))
         status_string = None
-        if self._bool_status == True:
+        if GPIO.input(self._maintenance_pin) == GPIO.HIGH: 
+            status_string = "MAINTENANCE"
+        elif self._bool_status == True:
             status_string = "STARTED"
         else:
             status_string = "FINISHED"
